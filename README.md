@@ -12,7 +12,7 @@ My personal website, built with [Next.js](https://nextjs.org/), [Tailwind CSS](h
 
 ```sh-session
 npm install -g pnpm
-git clone https://github.com/theAlmeidaOnline/thealmeida.online.git
+git clone https://github.com/the-almeida/thealmeida.online.git
 cd thealmeida.online
 ```
 Create an account and empty database on [Upstash](https://upstash.com).
