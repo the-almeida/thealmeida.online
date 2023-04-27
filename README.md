@@ -1,7 +1,7 @@
 <div align="center">
     <a href="https://thealmeida.online"><h1 align="center">thealmeida.online</h1></a>
     
-My personal website, built with [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/), [Upstash](https://upstash.com), [Contentlayer](https://www.contentlayer.dev/) and deployed to [Vercel](https://vercel.com/).
+My personal website, built with [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/) and deployed to [Vercel](https://vercel.com/).
 
 </div>
 
@@ -15,10 +15,6 @@ npm install -g pnpm
 git clone https://github.com/the-almeida/thealmeida.online.git
 cd thealmeida.online
 ```
-Create an account and empty database on [Upstash](https://upstash.com).
-
-Create a `.env` file similar to [`.env.example`] and fill it up with the database information from [Upstash](https://upstash.com).
-
 
 Then install dependencies and run the development server:
 ```sh-session
