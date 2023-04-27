@@ -5,17 +5,13 @@ interface MousePosition {
 	y: number;
 }
 
-export function useMousePosition(): MousePosition {
-	console.log('usa mouse position');
-	
+export function useMousePosition(): MousePosition {	
 	const [mousePosition, setMousePosition] = useState<MousePosition>({
 		x: 0,
 		y: 0,
 	});
 
 	useEffect(() => {
-		console.log('entoru no mouse move');
-		
 		const handleMouseMove = (event: MouseEvent) => {
 			setMousePosition({ x: event.clientX, y: event.clientY });
 		};
@@ -26,9 +22,6 @@ export function useMousePosition(): MousePosition {
 			window.removeEventListener("mousemove", handleMouseMove);
 		};
 	}, []);
-
-	console.log('actual mouse position: ', JSON.stringify(mousePosition));
-	
 
 	return mousePosition;
 }
