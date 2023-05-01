@@ -2,7 +2,7 @@
 import { Mail, Calendar } from "lucide-react";
 import { ImWhatsapp } from 'react-icons/im';
 import Link from "next/link";
-import { Navigation } from "../components/nav";
+import { FixedNavigation } from "../components/fixedNav";
 import { Card } from "../components/card";
 
 const contacts = [
@@ -29,7 +29,7 @@ const contacts = [
 export default function Contact() {
 	return (
 		<div className="bg-gradient-to-tl from-zinc-900/0 via-zinc-900 to-zinc-900/0">
-			<Navigation />
+			<FixedNavigation />
 			<div className="container flex items-center justify-center min-h-screen px-4 mx-auto">
 				<div className="grid w-full grid-cols-1 gap-8 mx-auto mt-32 sm:mt-0 sm:grid-cols-3 lg:gap-16 overflow-auto">
 					{contacts.map((contact) => (

@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 
-export const Navigation: React.FC = () => {
+export const FixedNavigation: React.FC = () => {
 	const ref = useRef<HTMLElement>(null);
 	const [isIntersecting, setIntersecting] = useState(true);
 
@@ -46,6 +46,7 @@ export const Navigation: React.FC = () => {
 					<Link
 						href="/"
 						className="duration-200 text-zinc-300 hover:text-zinc-100"
+						aria-label="Go back to the Home page."
 					>
 						<ArrowLeft className="w-6 h-6 " />
 					</Link>
