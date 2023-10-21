@@ -7,6 +7,13 @@ export const CenteredNavigation: React.FC = () => {
 		<nav className="py-16 animate-fade-in">
 			<div className="flex items-center justify-center gap-4">
 				<Link
+					href="/blog-continuous-learning"
+					target="_blank"
+					className="text-sm md:text-lg duration-500 text-zinc-400 hover:text-zinc-300"
+				>
+					Continuous Learning
+				</Link>
+				<Link
 					href="https://github.com/the-almeida"
 					target="_blank"
 					className="text-sm md:text-lg duration-500 text-zinc-400 hover:text-zinc-300"
