@@ -7,7 +7,8 @@ import {
   NavbarMenu,
   NavbarMenuToggle,
 } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
+import NextLink from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback } from "react";
 import { DarkModeSwitch } from "./darkmodeswitch";
 
@@ -17,6 +18,7 @@ interface Props {
 
 export const NavbarWrapper = ({ children }: Props) => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
@@ -33,11 +35,32 @@ export const NavbarWrapper = ({ children }: Props) => {
           wrapper: "w-full max-w-full",
         }}
       >
-        <NavbarContent className="w-full">NepeCorp</NavbarContent>
+        <NavbarContent className="w-full">
+          {pathname === "/clientView" ? "EmpresaDoCliente" : "NepeCorp"}
+        </NavbarContent>
         <NavbarContent
           justify="end"
           className="w-fit data-[justify=end]:flex-grow-0 hidden md:flex"
         >
+          <NextLink
+            href="/"
+            className="text-default-900 active:bg-none max-w-full"
+          >
+            <NavbarItem title="AdminView" isActive={pathname === "/"}>
+              AdminView
+            </NavbarItem>
+          </NextLink>
+          <NextLink
+            href="/clientView"
+            className="text-default-900 active:bg-none max-w-full"
+          >
+            <NavbarItem
+              title="ClientView"
+              isActive={pathname === "/clientView"}
+            >
+              ClientView
+            </NavbarItem>
+          </NextLink>
           <NavbarItem>
             <DarkModeSwitch />
           </NavbarItem>
@@ -58,6 +81,26 @@ export const NavbarWrapper = ({ children }: Props) => {
           className="md:hidden"
         />
         <NavbarMenu>
+          <NextLink
+            href="/"
+            className="text-default-900 active:bg-none max-w-full"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <NavbarItem title="AdminView" isActive={pathname === "/"}>
+              AdminView
+            </NavbarItem>
+          </NextLink>
+          <NextLink
+            href="/clientView"
+            className="text-default-900 active:bg-none max-w-full"
+          >
+            <NavbarItem
+              title="ClientView"
+              isActive={pathname === "/clientView"}
+            >
+              ClientView
+            </NavbarItem>
+          </NextLink>
           <NavbarItem>
             <DarkModeSwitch />
           </NavbarItem>

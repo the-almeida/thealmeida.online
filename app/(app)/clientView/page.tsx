@@ -1,8 +1,8 @@
-import { AdminView } from "@/components/home/adminView";
+import { ClientView } from "@/components/home/clientView";
 import type { NextPage } from "next";
 
 const Home: NextPage = () => {
-  return <AdminView />;
+  return <ClientView />;
 };
 
 export default Home;
