@@ -1,4 +1,4 @@
-import React from "react";
+import Link from "next/link";
 import { CenteredNavigation } from "./components/centeredNav";
 import Particles from "./components/particles";
 
@@ -26,7 +26,13 @@ export default function Home() {
           successful companies, visually stunning websites, performant APIs, and
           smartwatch integrations. I specialize in JS/TS Stack but also have
           basic knowledge on GO, PHP and Python. Currently, I'm looking for new
-          opportunities. Let's chat?
+          opportunities.{" "}
+          <Link
+            href="https://wa.link/dgb8r8"
+            className="duration-200 text-zinc-400 border-b-2 border-zinc-400 hover:text-zinc-100"
+          >
+            Let's chat?
+          </Link>
         </h2>
       </div>
     </div>
