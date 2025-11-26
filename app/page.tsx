@@ -4,7 +4,8 @@ import Particles from "./components/particles";
 
 export default function Home() {
   const currentYear = new Date().getFullYear();
-  const yearsOfExperience = currentYear - 2015;
+  const yearIStartedWorking = 2015
+  const yearsOfExperience = currentYear - yearIStartedWorking;
   return (
     <div className="flex flex-col items-center justify-center w-screen h-screen bg-gradient-to-tl from-black via-zinc-600/20 to-black">
       <CenteredNavigation />
