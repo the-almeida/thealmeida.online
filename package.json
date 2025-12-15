@@ -10,7 +10,7 @@
   "dependencies": {
     "@types/react": "18.0.29",
     "@vercel/analytics": "^0.1.11",
-    "framer-motion": "^10.9.1",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.561.0",
     "next": "^16.0.10",
     "postcss-nesting": "^13.0.2",
