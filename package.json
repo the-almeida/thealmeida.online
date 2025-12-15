@@ -13,7 +13,7 @@
     "framer-motion": "^10.9.1",
     "lucide-react": "^0.127.0",
     "next": "^16.0.10",
-    "postcss-nesting": "^11.2.2",
+    "postcss-nesting": "^13.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^4.8.0"
