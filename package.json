@@ -11,7 +11,7 @@
     "@types/react": "18.0.29",
     "@vercel/analytics": "^0.1.11",
     "framer-motion": "^10.9.1",
-    "lucide-react": "^0.127.0",
+    "lucide-react": "^0.561.0",
     "next": "^16.0.10",
     "postcss-nesting": "^11.2.2",
     "react": "18.2.0",
