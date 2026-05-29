@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "thealmeida.online",
 		description:
-			"An innovative and highly skilled entrepreneur and developer, with 8 years of experience specializing in the JS/TS stack.",
+			"Full-stack engineer and two-time founder. 10+ years shipping products end to end.",
 		url: "https://thealmeida.online",
 		siteName: "thealmeida.online",
 		images: [
