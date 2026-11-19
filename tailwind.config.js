@@ -33,11 +33,17 @@ module.exports = {
 				"fade-right": "fade-right 1s ease-in-out forwards",
 				"dialog-in": "dialog-in 200ms ease-out both",
 				"badge-bump": "badge-bump 600ms ease-out",
+				glint: "glint 900ms ease-in-out both",
 			},
 			keyframes: {
 				"dialog-in": {
 					"0%": { opacity: "0", transform: "scale(0.96)" },
 					"100%": { opacity: "1", transform: "scale(1)" },
+				},
+				glint: {
+					"0%": { opacity: "0", transform: "scale(0) rotate(0deg)" },
+					"50%": { opacity: "1", transform: "scale(1.4) rotate(90deg)" },
+					"100%": { opacity: "0", transform: "scale(0) rotate(180deg)" },
 				},
 				"badge-bump": {
 					"0%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(252,211,77,0.6)" },
