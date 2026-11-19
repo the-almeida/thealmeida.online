@@ -31,8 +31,19 @@ module.exports = {
 				title: "title 1s ease-out forwards",
 				"fade-left": "fade-left 1s ease-in-out forwards",
 				"fade-right": "fade-right 1s ease-in-out forwards",
+				"dialog-in": "dialog-in 200ms ease-out both",
+				"badge-bump": "badge-bump 600ms ease-out",
 			},
 			keyframes: {
+				"dialog-in": {
+					"0%": { opacity: "0", transform: "scale(0.96)" },
+					"100%": { opacity: "1", transform: "scale(1)" },
+				},
+				"badge-bump": {
+					"0%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(252,211,77,0.6)" },
+					"40%": { transform: "scale(1.15)" },
+					"100%": { transform: "scale(1)", boxShadow: "0 0 0 14px rgba(252,211,77,0)" },
+				},
 				"fade-in": {
 					"0%": {
 						opacity: "0%",

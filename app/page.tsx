@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { CenteredNavigation } from "./components/centeredNav";
 import Particles from "./components/particles";
+import { SecretsLayer } from "./components/secrets/secrets-layer";
+import { SecretsProvider } from "./components/secrets/secrets-context";
 
 export default function Home() {
   const currentYear = new Date().getFullYear();
   const yearIStartedWorking = 2015;
   const yearsOfExperience = currentYear - yearIStartedWorking;
   return (
+    <SecretsProvider>
     <div className="w-full overflow-x-hidden">
       <Particles
         className="fixed inset-0 -z-10 animate-fade-in"
@@ -43,6 +46,8 @@ export default function Home() {
           </h2>
         </div>
       </section>
+      <SecretsLayer />
     </div>
+    </SecretsProvider>
   );
 }
