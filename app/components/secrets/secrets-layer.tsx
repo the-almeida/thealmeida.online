@@ -6,6 +6,7 @@ import { PrizeContent } from "./prize";
 import { SecretsBadge } from "./secrets-badge";
 import { useSecrets } from "./secrets-context";
 import { ShipFleet } from "./ship-fleet";
+import { GameOverlay } from "./game/game-overlay";
 
 /** Everything that floats above the page: badge, dialogs, ships, game. */
 export const SecretsLayer: React.FC = () => {
@@ -16,6 +17,7 @@ export const SecretsLayer: React.FC = () => {
 		<>
 			<SecretsBadge />
 			<ShipFleet />
+			<GameOverlay />
 
 			<Dialog open={overlay === "found-name"} onClose={close} labelledBy="secret-1-title">
 				<p className="font-mono text-xs tracking-[0.3em] text-amber-300/80 uppercase">
