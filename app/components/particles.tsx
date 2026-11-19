@@ -26,6 +26,7 @@ export default function Particles({
 	const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 	const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
 	const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1;
+	const frame = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (canvasRef.current) {
@@ -37,6 +38,8 @@ export default function Particles({
 
 		return () => {
 			window.removeEventListener("resize", initCanvas);
+			// Stop the loop on unmount, otherwise navigating away and back stacks loops.
+			if (frame.current !== null) window.cancelAnimationFrame(frame.current);
 		};
 	}, []);
 
@@ -223,7 +226,7 @@ export default function Particles({
 				);
 			}
 		});
-		window.requestAnimationFrame(animate);
+		frame.current = window.requestAnimationFrame(animate);
 	};
 
 	return (

@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 		default: "The Almeida",
 		template: "%s | The Almeida",
 	},
-	description: "Full",
+	description:
+		"Full-stack engineer and two-time founder. 10+ years shipping products end to end.",
 	openGraph: {
 		title: "thealmeida.online",
 		description:
