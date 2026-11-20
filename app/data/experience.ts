@@ -1,9 +1,10 @@
-// Work history, oldest first. Wording follows the CV (Nov 2026): same
-// verbs, same tone. Edit the CV first, then mirror it here.
+// Work history, oldest first. Source: CV (Nov 2026). Same voice as the CV
+// (its verbs and word choices), but short: one idea per bullet, one line if
+// possible. The card is for scanning, the CV is for detail.
 //
 // - `outcome`: the one line shown on the closed card. Wrap the key result in
 //   **double asterisks** to emphasize it. Real numbers only.
-// - `work`: the CV bullets, shown in "Show details".
+// - `work`: short bullets shown in "Show details". Don't repeat the outcome.
 // - `tags`: the stack (skills for non-engineering roles). The first 4 show on
 //   the closed card.
 // - `icon`: pixel-art icon key, see app/components/timeline/project-icons.ts.
@@ -29,12 +30,13 @@ export const experiences: Experience[] = [
 		start: "2016-01",
 		end: "2020-01",
 		where: "Maringá, Brazil",
-		outcome: "Co-founded a web development agency and grew it to **25 clients**.",
+		outcome:
+			"Co-founded a web agency and grew it to **25 clients**.",
 		work: [
-			"Managed a multidisciplinary team of junior developers, a designer, and sales professionals across multiple client projects.",
-			"Delivered institutional websites for diverse clients using HTML, CSS, jQuery, and Bootstrap, and built MVC applications with PHP (Laravel).",
-			"Set up and managed cloud infrastructure: Apache/NGINX servers with LetsEncrypt on AWS EC2 and a branded ownCloud deployment (GalileoCloud) on EC2 + EFS.",
-			"Built custom API integrations with major Brazilian management software providers.",
+			"Managed a team of junior developers, a designer, and sales across client projects.",
+			"Delivered institutional websites and Laravel MVC apps for diverse clients.",
+			"Set up the AWS EC2 infrastructure and GalileoCloud, our branded ownCloud on EC2 + EFS.",
+			"Built API integrations with major Brazilian management software providers.",
 		],
 		tags: ["PHP", "Laravel", "jQuery", "Bootstrap", "AWS EC2", "EFS", "NGINX"],
 		icon: "browser",
@@ -47,10 +49,11 @@ export const experiences: Experience[] = [
 		end: "2021-02",
 		where: "Remote",
 		outcome:
-			"Co-founded a healthtech startup delivering **smartwatch-based monitoring for elderly care**, from ideation and branding through to launch.",
+			"Took a smartwatch-based elderly care product from idea to launch.",
 		work: [
-			"Built the entire technical stack: a Node.js API collecting real-time smartwatch health metrics via TCP, a React.js web dashboard, a React Native mobile app (published on Google Play), and an institutional website with PagSeguro payment integration.",
-			"Managed design direction, stakeholder communication, and product roadmap as a technical co-founder.",
+			"Built the entire stack: a Node.js API collecting real-time smartwatch metrics via TCP, a React dashboard, and a React Native app on Google Play.",
+			"Shipped the institutional website with PagSeguro payments.",
+			"Led design direction, stakeholder communication, and the product roadmap as technical co-founder.",
 		],
 		tags: ["Node.js", "TCP", "React", "React Native", "PagSeguro"],
 		icon: "watch",
@@ -62,10 +65,11 @@ export const experiences: Experience[] = [
 		start: "2021-03",
 		end: "2021-08",
 		where: "Freelance",
-		outcome: "Designed and built a **full inventory management system**.",
+		outcome:
+			"Designed and built their inventory management system, end to end.",
 		work: [
-			"Gathered requirements from managers and employees, then validated UI/UX flows via Figma and Whimsical.",
-			"Built the React.js frontend on Vercel and the Node.js API with PostgreSQL on Heroku.",
+			"Gathered requirements from managers and employees, and validated the UI/UX flows in Figma.",
+			"Built the React frontend on Vercel and the Node.js + PostgreSQL API on Heroku.",
 		],
 		tags: ["React", "Node.js", "PostgreSQL", "Vercel", "Heroku", "Figma"],
 		icon: "boxes",
@@ -78,12 +82,12 @@ export const experiences: Experience[] = [
 		end: "2023-08",
 		where: "Maringá, Brazil",
 		outcome:
-			"Built **high-throughput backend systems** using Node.js workers and microservices in a producer-consumer architecture, processing large data volumes behind a Go-based API gateway.",
+			"Built high-throughput Node.js services behind a Go API gateway.",
 		work: [
-			"Designed and maintained data pipelines with PostgreSQL triggers, MongoDB collections, and Redis caching layers, and extended API routes in the Go-based gateway.",
-			"Established CI/CD delivery pipelines using GitLab (Docker-in-Docker) with deployments to AWS ECS and container images stored in ECR.",
-			"Led frontend modernization, delivering a new Vue.js interface aligned with the company design system while maintaining legacy AngularJS applications in parallel.",
-			"Raised code quality standards by implementing unit and integration tests with Jest and leading internal training sessions on system architecture, caching strategies, and engineering best practices.",
+			"Designed data pipelines with PostgreSQL triggers, MongoDB, and Redis caching.",
+			"Established GitLab CI/CD (Docker-in-Docker) with deployments to AWS ECS.",
+			"Led the frontend modernization to Vue.js while maintaining the legacy AngularJS apps.",
+			"Raised code quality with Jest tests and led internal training on architecture and caching.",
 		],
 		tags: ["Node.js", "Go", "PostgreSQL", "MongoDB", "Redis", "Docker", "GitLab CI/CD", "AWS ECS", "Vue.js", "Jest"],
 		icon: "server",
@@ -96,12 +100,12 @@ export const experiences: Experience[] = [
 		end: "2025-04",
 		where: "Remote",
 		outcome:
-			"Designed and built an intention, reflection, and recommendation engine that **doubled user engagement**, from 0.75 to 1.5 sessions per week.",
+			"Built a recommendation engine that **doubled** weekly session attendance, from 0.75 to 1.5.",
 		work: [
-			"Operated as a core member of a small, autonomous senior engineering team, collaborating directly with the CEO, design, and operations to prioritize features and ship product improvements.",
-			"Owned and evolved core platform integrations (Zoom SDK, Circle API, peer-group assignment system), handling bug fixes, version upgrades, and migrations.",
-			"The peer-group assignment flow alone replaced a months-long manual process, impacting the entire user base.",
-			"Identified and resolved a critical Zoom API bug in partnership with Zoom's engineering team, fixing an issue that had affected the platform for over a year.",
+			"Worked in a small, autonomous senior team, directly with the CEO, design, and operations.",
+			"Owned the core integrations (Zoom SDK, Circle API), from bug fixes to upgrades and migrations.",
+			"Evolved the peer-group assignment flow, replacing a months-long manual process for the entire user base.",
+			"Identified and resolved a year-old Zoom API bug in partnership with Zoom's engineering team.",
 		],
 		tags: ["React", "GraphQL", "Firestore", "Cloud Functions", "Zoom SDK", "Circle API", "Playwright", "Cypress"],
 		icon: "tree",
@@ -114,10 +118,11 @@ export const experiences: Experience[] = [
 		end: "2026-06",
 		where: "Remote",
 		outcome:
-			"Mentored 3 aspiring developers from zero programming knowledge to jobs in tech (**3 of 3 now employed**).",
+			"Took 3 people from zero code to jobs in tech: **3 of 3** hired.",
 		work: [
-			"Built the self-directed learning and problem-solving skills that let them keep growing on their own.",
-			"Ran weekly group sessions and 1:1s with an individual plan per mentee, adapting the track to each goal: Python and data, JS/TS full-stack, or English and confidence coaching.",
+			"Ran weekly group sessions and 1:1s with an individual plan per mentee.",
+			"Adapted each track to the goal: Python and data, JS/TS full-stack, or English and confidence.",
+			"Focused on self-directed learning, so they keep growing on their own.",
 		],
 		tags: ["Mentoring", "1:1s", "Individual Development Plans", "Coaching", "Curriculum Design"],
 		icon: "stars",
@@ -130,11 +135,13 @@ export const experiences: Experience[] = [
 		end: "2026-09",
 		where: "Remote · Contract",
 		outcome:
-			"As the sole engineer, partnering with the PM, took a presence-based social platform from concept to production, now **live in pilots** with a commercial venue and a municipal government.",
+			"Sole engineer on a social app for people at the same place, from concept to **2 live pilots**.",
 		work: [
-			"Architected the codebase from scratch on Next.js and Supabase using vertical-slice and hexagonal architecture, keeping features isolated and the domain independent of infrastructure.",
-			"Built the AI matching core: user embeddings (OpenAI, pgvector) and LLM-generated profile narratives (Claude API) to connect people sharing the same event or venue.",
+			"Partnered with the PM to take the product from concept to production.",
+			"Architected the codebase from scratch on Next.js and Supabase, with vertical-slice and hexagonal architecture.",
+			"Built the AI matching core: OpenAI embeddings, pgvector, and Claude-generated profile narratives.",
 			"Shipped real-time event lobbies with in-lobby messaging on Supabase Realtime.",
+			"Now live in pilots with a commercial venue and a municipal government.",
 		],
 		tags: ["Next.js", "TypeScript", "Supabase", "pgvector", "Claude API", "OpenAI Embeddings", "Vercel"],
 		icon: "pin",
