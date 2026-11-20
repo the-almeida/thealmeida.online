@@ -265,7 +265,7 @@ const Mentoring: React.FC = () => {
 						</motion.text>
 						<motion.text
 							x={x}
-							y="96"
+							y={i === 1 ? 116 : 96}
 							textAnchor="middle"
 							fill="#5eead4"
 							fontSize="9"
