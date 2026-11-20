@@ -3,7 +3,7 @@ import React from "react";
 // Tiny pixel-art sprites drawn as SVG rects. Each char is one pixel; "." is
 // transparent. Sprites point to the right (0 rad) so they can be rotated to
 // the direction of travel.
-type Sprite = { rows: string[]; palette: Record<string, string> };
+export type Sprite = { rows: string[]; palette: Record<string, string> };
 
 export const FAST_SHIP: Sprite = {
 	rows: [

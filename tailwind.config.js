@@ -35,11 +35,16 @@ module.exports = {
 				"badge-bump": "badge-bump 600ms ease-out",
 				glint: "glint 900ms ease-in-out both",
 				twinkle: "twinkle 3.2s ease-in-out infinite",
+				orbit: "orbit 4.5s linear infinite",
 			},
 			keyframes: {
 				"dialog-in": {
 					"0%": { opacity: "0", transform: "scale(0.96)" },
 					"100%": { opacity: "1", transform: "scale(1)" },
+				},
+				orbit: {
+					"0%": { transform: "rotate(0deg)" },
+					"100%": { transform: "rotate(360deg)" },
 				},
 				twinkle: {
 					"0%, 100%": { opacity: "0.85", transform: "scale(1)" },
