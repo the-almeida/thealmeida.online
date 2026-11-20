@@ -34,16 +34,16 @@ module.exports = {
 				"dialog-in": "dialog-in 200ms ease-out both",
 				"badge-bump": "badge-bump 600ms ease-out",
 				glint: "glint 900ms ease-in-out both",
-				"planet-float": "planet-float 6s ease-in-out infinite",
+				twinkle: "twinkle 3.2s ease-in-out infinite",
 			},
 			keyframes: {
 				"dialog-in": {
 					"0%": { opacity: "0", transform: "scale(0.96)" },
 					"100%": { opacity: "1", transform: "scale(1)" },
 				},
-				"planet-float": {
-					"0%, 100%": { translate: "0 0" },
-					"50%": { translate: "0 -6px" },
+				twinkle: {
+					"0%, 100%": { opacity: "0.85", transform: "scale(1)" },
+					"50%": { opacity: "1", transform: "scale(1.12)" },
 				},
 				glint: {
 					"0%": { opacity: "0", transform: "scale(0) rotate(0deg)" },

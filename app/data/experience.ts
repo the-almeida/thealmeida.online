@@ -1,13 +1,12 @@
 // Work history, oldest first. Source: CV (Nov 2026).
-
-export type SceneId =
-	| "agency"
-	| "smartwatch"
-	| "inventory"
-	| "pipeline"
-	| "engagement"
-	| "mentoring"
-	| "matching";
+//
+// Writing rules for this file:
+// - `outcome` is the one line a recruiter reads. Lead with the result; wrap
+//   real numbers in **double asterisks** to emphasize them. No fake metrics.
+// - `context` answers "what was this place and what was my scope?" in one or
+//   two sentences. Skip it when the outcome already says it.
+// - `work` lists what I built or led, starting with a verb or the thing built.
+// - `tags` is the stack (or skills, for non-engineering roles).
 
 export type Experience = {
 	id: string;
@@ -16,18 +15,10 @@ export type Experience = {
 	start: string; // "YYYY-MM"
 	end: string; // "YYYY-MM"
 	where: string;
-	/** One-line highlight shown on the collapsed card. */
-	highlight: string;
-	/** "Mission": the context in one or two sentences. */
-	mission: string;
-	shipped: string[];
-	/** Headline result, shown big. */
-	impact: { value: string; label: string };
-	stack: string[];
-	founder?: boolean;
-	scene: SceneId;
-	/** Planet colors for option 2 (from, to). */
-	colors: [string, string];
+	outcome: string;
+	context?: string;
+	work: string[];
+	tags: string[];
 };
 
 export const experiences: Experience[] = [
@@ -38,19 +29,15 @@ export const experiences: Experience[] = [
 		start: "2016-01",
 		end: "2020-01",
 		where: "Maringá, Brazil",
-		highlight: "Co-founded a web agency and grew it to 25 clients.",
-		mission:
-			"Build a web agency from zero while still in university, and lead a team of junior developers, a designer and sales.",
-		shipped: [
-			"Institutional websites and PHP (Laravel) MVC apps for diverse clients",
-			"GalileoCloud: a branded ownCloud deployment on AWS EC2 + EFS",
-			"Custom integrations with major Brazilian management software providers",
+		outcome: "Co-founded a web agency and grew it to **25 clients**.",
+		context:
+			"I ran engineering and the team: junior developers, a designer and sales, across several client projects at once.",
+		work: [
+			"Institutional websites and Laravel MVC apps for clients in different industries",
+			"Infrastructure on AWS EC2 with NGINX/Apache and Let's Encrypt, plus GalileoCloud, our branded ownCloud on EC2 + EFS",
+			"Integrations with major Brazilian management software providers",
 		],
-		impact: { value: "25", label: "clients served" },
-		stack: ["PHP", "Laravel", "jQuery", "Bootstrap", "AWS EC2", "NGINX"],
-		founder: true,
-		scene: "agency",
-		colors: ["#60a5fa", "#1e3a8a"],
+		tags: ["PHP", "Laravel", "jQuery", "Bootstrap", "AWS EC2", "EFS", "NGINX"],
 	},
 	{
 		id: "cuideme",
@@ -59,59 +46,46 @@ export const experiences: Experience[] = [
 		start: "2019-08",
 		end: "2021-02",
 		where: "Remote",
-		highlight: "Smartwatch-based monitoring for elderly care, from idea to launch.",
-		mission:
-			"Give families peace of mind: watch an elderly relative's health in real time through a smartwatch.",
-		shipped: [
-			"Node.js API ingesting real-time smartwatch health metrics over TCP",
-			"React web dashboard and a React Native app on Google Play",
-			"Institutional website with PagSeguro payments",
+		outcome: "Took a smartwatch-based elderly care product from idea to launch.",
+		context:
+			"A healthtech startup monitoring elderly people's health in real time. Besides building the whole stack, I owned design direction and the roadmap.",
+		work: [
+			"Node.js API receiving live health metrics from the watches over TCP",
+			"React web dashboard and a React Native app published on Google Play",
+			"Website with PagSeguro payments",
 		],
-		impact: { value: "0 → 1", label: "healthtech product launched" },
-		stack: ["Node.js", "TCP", "React", "React Native", "PagSeguro"],
-		founder: true,
-		scene: "smartwatch",
-		colors: ["#f87171", "#7f1d1d"],
+		tags: ["Node.js", "TCP", "React", "React Native", "PagSeguro"],
 	},
 	{
 		id: "kine",
 		company: "Kine Climatizações",
-		role: "Full Stack Software Engineer",
+		role: "Full Stack Engineer",
 		start: "2021-03",
 		end: "2021-08",
 		where: "Freelance",
-		highlight: "Designed and built a full inventory management system.",
-		mission:
-			"Replace spreadsheets with a system the managers and the field team would actually use.",
-		shipped: [
-			"Requirements gathered with managers and employees, flows validated in Figma and Whimsical",
+		outcome: "Designed and built their inventory management system, end to end.",
+		work: [
+			"Gathered requirements with managers and staff, and validated the flows in Figma and Whimsical before writing code",
 			"React frontend on Vercel, Node.js API with PostgreSQL on Heroku",
 		],
-		impact: { value: "1", label: "system replacing spreadsheets" },
-		stack: ["React", "Node.js", "PostgreSQL", "Vercel", "Heroku", "Figma"],
-		scene: "inventory",
-		colors: ["#34d399", "#064e3b"],
+		tags: ["React", "Node.js", "PostgreSQL", "Vercel", "Heroku", "Figma"],
 	},
 	{
 		id: "tecnospeed",
 		company: "TecnoSpeed TI",
-		role: "Full Stack Software Engineer",
+		role: "Full Stack Engineer",
 		start: "2021-07",
 		end: "2023-08",
 		where: "Maringá, Brazil",
-		highlight: "High-throughput Node.js workers behind a Go API gateway.",
-		mission:
-			"Process large data volumes reliably, and modernize the frontend without stopping the legacy apps.",
-		shipped: [
-			"Producer-consumer microservices with Node.js workers and a Go gateway",
+		outcome: "Built high-throughput Node.js services behind a Go API gateway.",
+		work: [
+			"Producer-consumer microservices and workers for large data volumes, and new routes in the Go gateway",
 			"Data pipelines with PostgreSQL triggers, MongoDB and Redis caching",
-			"GitLab CI/CD (Docker-in-Docker) deploying to AWS ECS",
-			"A new Vue.js interface alongside legacy AngularJS",
+			"CI/CD with GitLab (Docker-in-Docker) deploying to AWS ECS",
+			"Led the new Vue.js interface while keeping the AngularJS apps running",
+			"Introduced unit and integration tests with Jest, and ran internal training on architecture and caching",
 		],
-		impact: { value: "CI/CD", label: "from GitLab to AWS ECS, built from scratch" },
-		stack: ["Node.js", "Go", "PostgreSQL", "MongoDB", "Redis", "Docker", "AWS ECS", "Vue.js", "Jest"],
-		scene: "pipeline",
-		colors: ["#fbbf24", "#78350f"],
+		tags: ["Node.js", "Go", "PostgreSQL", "MongoDB", "Redis", "Docker", "GitLab CI", "AWS ECS", "Vue.js", "Jest"],
 	},
 	{
 		id: "banyan",
@@ -120,18 +94,15 @@ export const experiences: Experience[] = [
 		start: "2024-02",
 		end: "2025-04",
 		where: "Remote",
-		highlight: "Built a recommendation engine that doubled user engagement.",
-		mission:
-			"Small senior team working directly with the CEO: get members to show up to more peer sessions.",
-		shipped: [
-			"Intention, reflection and recommendation engine",
-			"Peer-group assignment flow that replaced a months-long manual process",
-			"Fixed a year-old Zoom API bug together with Zoom's engineers",
+		outcome: "Built a recommendation engine that **doubled** weekly session attendance, from 0.75 to 1.5.",
+		context: "Small, autonomous senior team deciding what to build directly with the CEO, design and operations.",
+		work: [
+			"The intention, reflection and recommendation engine behind that jump",
+			"A peer-group assignment flow that replaced a months-long manual process for the whole user base",
+			"Owned the Zoom SDK and Circle API integrations: fixes, upgrades and migrations",
+			"Found a Zoom API bug that had hit the platform for over a year, and fixed it with Zoom's engineers",
 		],
-		impact: { value: "2×", label: "sessions per week (0.75 → 1.5)" },
-		stack: ["React", "GraphQL", "Firestore", "Cloud Functions", "Zoom SDK", "Playwright", "Cypress"],
-		scene: "engagement",
-		colors: ["#a78bfa", "#3b0764"],
+		tags: ["React", "GraphQL", "Firestore", "Cloud Functions", "Zoom SDK", "Playwright", "Cypress"],
 	},
 	{
 		id: "mentorship",
@@ -140,17 +111,13 @@ export const experiences: Experience[] = [
 		start: "2025-07",
 		end: "2026-06",
 		where: "Remote",
-		highlight: "Took 3 people from zero code to jobs in tech.",
-		mission:
-			"Turn complete beginners into self-directed developers, with a plan built around each person's goal.",
-		shipped: [
-			"Weekly group sessions and 1:1s",
-			"Individual tracks: Python and data, JS/TS full-stack, English and confidence",
+		outcome: "Took 3 people from zero code to jobs in tech: **3 of 3** hired.",
+		work: [
+			"Weekly group sessions plus 1:1s, with a plan built around each person's goal",
+			"Three different tracks: Python and data, JS/TS full-stack, and English and confidence",
+			"Focused on self-directed learning, so they keep growing without me",
 		],
-		impact: { value: "3 / 3", label: "mentees now employed" },
-		stack: ["Mentoring", "1:1s", "Development plans", "Curriculum design"],
-		scene: "mentoring",
-		colors: ["#2dd4bf", "#134e4a"],
+		tags: ["Mentoring", "1:1s", "Development plans", "Curriculum design"],
 	},
 	{
 		id: "sommar",
@@ -158,34 +125,40 @@ export const experiences: Experience[] = [
 		role: "Founding Engineer",
 		start: "2025-12",
 		end: "2026-09",
-		where: "Remote, Contract",
-		highlight: "Sole engineer: a presence-based social platform, concept to pilots.",
-		mission:
-			"Connect people who are in the same place at the same time, starting with a venue and a city government.",
-		shipped: [
-			"Vertical-slice + hexagonal architecture on Next.js and Supabase",
-			"AI matching: pgvector embeddings and Claude-written profile narratives",
-			"Real-time event lobbies with in-lobby messaging",
+		where: "Remote · Contract",
+		outcome: "Sole engineer on a social app for people at the same place, from concept to **2 live pilots**.",
+		context: "I partnered with the PM and built the product from an empty repo.",
+		work: [
+			"Architecture on Next.js and Supabase with vertical slices and hexagonal design, so features stay isolated and the domain stays free of infrastructure",
+			"AI matching: user embeddings with OpenAI and pgvector, and profile narratives written by the Claude API",
+			"Real-time event lobbies with in-lobby messaging on Supabase Realtime",
+			"Pilots live with a commercial venue and a municipal government",
 		],
-		impact: { value: "2", label: "live pilots: a venue and a municipality" },
-		stack: ["Next.js", "TypeScript", "Supabase", "pgvector", "Claude API", "OpenAI", "Vercel"],
-		scene: "matching",
-		colors: ["#f472b6", "#831843"],
+		tags: ["Next.js", "TypeScript", "Supabase", "pgvector", "Claude API", "OpenAI", "Vercel"],
 	},
 ];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const parse = (s: string) => s.split("-").map(Number) as [number, number];
+
 export function formatPeriod(e: Experience) {
 	const f = (s: string) => {
-		const [y, m] = s.split("-").map(Number);
+		const [y, m] = parse(s);
 		return `${MONTHS[m - 1]} ${y}`;
 	};
 	return `${f(e.start)} – ${f(e.end)}`;
 }
 
-export function durationMonths(e: Experience) {
-	const [sy, sm] = e.start.split("-").map(Number);
-	const [ey, em] = e.end.split("-").map(Number);
-	return (ey - sy) * 12 + (em - sm) + 1;
+/** LinkedIn-style duration, counting both the first and last month. */
+export function formatDuration(e: Experience) {
+	const [sy, sm] = parse(e.start);
+	const [ey, em] = parse(e.end);
+	const total = (ey - sy) * 12 + (em - sm) + 1;
+	const y = Math.floor(total / 12);
+	const m = total % 12;
+	const parts = [];
+	if (y) parts.push(`${y} yr${y > 1 ? "s" : ""}`);
+	if (m) parts.push(`${m} mo${m > 1 ? "s" : ""}`);
+	return parts.join(" ");
 }
