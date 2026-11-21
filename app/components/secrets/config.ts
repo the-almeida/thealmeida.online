@@ -7,9 +7,9 @@ export type SecretId = "name" | "ship" | "score";
  * for the next secret still to find, so the list never spoils the journey.
  */
 export const SECRETS: { id: SecretId; title: string; hint: string }[] = [
-	{ id: "name", title: "Name Dropper", hint: "Some things up here are clickable." },
-	{ id: "ship", title: "Reverse Abduction", hint: "Keep your eyes on the sky." },
-	{ id: "score", title: "It Was Rocket Science", hint: "Prove you can fly." },
+	{ id: "name", title: "Big Bang: In the beginning was the Name", hint: "Some things up here are clickable." },
+	{ id: "ship", title: "Cosmic friend spotted", hint: "Keep your eyes on the sky." },
+	{ id: "score", title: "It wasn't rocket science", hint: "Prove you can fly." },
 ];
 
 export const STORAGE_KEY = "thealmeida:secrets";

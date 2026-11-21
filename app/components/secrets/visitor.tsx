@@ -3,7 +3,7 @@ import { useReducedMotion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "../umami";
-import { VISITOR_BOUNCES, VISITOR_EVERY_MS, VISITOR_LINES, VISITOR_SPEED, WHATSAPP_URL } from "./config";
+import { SECRETS, VISITOR_BOUNCES, VISITOR_EVERY_MS, VISITOR_LINES, VISITOR_SPEED, WHATSAPP_URL } from "./config";
 import { Eyebrow, buttonClass } from "./dialog";
 import { bounce } from "./flight";
 import { SAUCER } from "./pixel-art";
@@ -84,7 +84,8 @@ export const Visitor: React.FC<{ onCatch: () => void }> = ({ onCatch }) => {
 /** What the visitor says once caught: nothing was hidden, so come say hi. */
 export const VisitorContent: React.FC<{ titleId: string; onClose: () => void }> = ({ titleId, onClose }) => (
 	<div className="text-center">
-		<Eyebrow>✦ Close encounter ✦</Eyebrow>
+		{/* Not one of the secrets: the thing that was always there. */}
+		<Eyebrow>✦ Secret 0 of {SECRETS.length} ✦</Eyebrow>
 		<h2 id={titleId} className="mt-4 text-3xl text-balance text-zinc-100 font-display">
 			You found what was never lost
 		</h2>
