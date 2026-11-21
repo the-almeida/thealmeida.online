@@ -42,6 +42,7 @@ export default function Home() {
             for new opportunities.{" "}
             <Link
               href="https://wa.link/dgb8r8"
+              data-umami-event="hero_whatsapp_clicked"
               className="duration-200 text-zinc-400 border-b-2 border-zinc-400 hover:text-zinc-100"
             >
               Let's chat?
