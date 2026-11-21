@@ -14,7 +14,7 @@ export const PrizeContent: React.FC<{
 		<Eyebrow>
 			✦ {SECRETS.length} of {SECRETS.length} secrets found ✦
 		</Eyebrow>
-		<h2 id={titleId} className="mt-4 text-3xl text-zinc-100 font-display md:text-4xl">
+		<h2 id={titleId} className="mt-4 text-3xl text-balance text-zinc-100 font-display md:text-4xl">
 			Curious people move the world forward
 		</h2>
 		<p className="mt-4 text-zinc-400">

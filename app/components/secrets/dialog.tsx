@@ -103,7 +103,7 @@ export const Eyebrow: React.FC<React.PropsWithChildren> = ({ children }) => (
 );
 
 const BUTTON_BASE =
-	"inline-flex items-center justify-center gap-2 px-5 py-3 font-medium duration-200 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-100";
+	"inline-flex items-center justify-center gap-2 px-5 py-3 font-medium whitespace-nowrap duration-200 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-100";
 
 export const buttonClass = (variant: "primary" | "ghost" = "primary") =>
 	`${BUTTON_BASE} ${

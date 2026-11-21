@@ -85,7 +85,7 @@ export const Visitor: React.FC<{ onCatch: () => void }> = ({ onCatch }) => {
 export const VisitorContent: React.FC<{ titleId: string; onClose: () => void }> = ({ titleId, onClose }) => (
 	<div className="text-center">
 		<Eyebrow>✦ Close encounter ✦</Eyebrow>
-		<h2 id={titleId} className="mt-4 text-3xl text-zinc-100 font-display">
+		<h2 id={titleId} className="mt-4 text-3xl text-balance text-zinc-100 font-display">
 			You found what was never lost
 		</h2>
 		<p className="mt-4 text-zinc-400">
@@ -93,7 +93,7 @@ export const VisitorContent: React.FC<{ titleId: string; onClose: () => void }> 
 			this far, we'd probably get along.
 		</p>
 		<p className="mt-4 text-zinc-200">Why not send me a hi?</p>
-		<div className="flex flex-col justify-center gap-3 mt-8 sm:flex-row">
+		<div className="flex flex-col gap-3 mt-8">
 			<a
 				href={WHATSAPP_URL}
 				target="_blank"

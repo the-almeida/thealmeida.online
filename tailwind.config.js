@@ -31,17 +31,10 @@ module.exports = {
 				title: "title 1s ease-out forwards",
 				"fade-left": "fade-left 1s ease-in-out forwards",
 				"fade-right": "fade-right 1s ease-in-out forwards",
-				"dialog-in": "dialog-in 200ms ease-out both",
-				"badge-bump": "badge-bump 600ms ease-out",
-				glint: "glint 900ms ease-in-out both",
 				twinkle: "twinkle 3.2s ease-in-out infinite",
 				orbit: "orbit 4.5s linear infinite",
 			},
 			keyframes: {
-				"dialog-in": {
-					"0%": { opacity: "0", transform: "scale(0.96)" },
-					"100%": { opacity: "1", transform: "scale(1)" },
-				},
 				orbit: {
 					"0%": { transform: "rotate(0deg)" },
 					"100%": { transform: "rotate(360deg)" },
@@ -49,16 +42,6 @@ module.exports = {
 				twinkle: {
 					"0%, 100%": { opacity: "0.85", transform: "scale(1)" },
 					"50%": { opacity: "1", transform: "scale(1.12)" },
-				},
-				glint: {
-					"0%": { opacity: "0", transform: "scale(0) rotate(0deg)" },
-					"50%": { opacity: "1", transform: "scale(1.4) rotate(90deg)" },
-					"100%": { opacity: "0", transform: "scale(0) rotate(180deg)" },
-				},
-				"badge-bump": {
-					"0%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(252,211,77,0.6)" },
-					"40%": { transform: "scale(1.15)" },
-					"100%": { transform: "scale(1)", boxShadow: "0 0 0 14px rgba(252,211,77,0)" },
 				},
 				"fade-in": {
 					"0%": {

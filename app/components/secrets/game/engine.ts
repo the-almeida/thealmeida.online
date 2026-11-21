@@ -1,276 +1,256 @@
-// Meteor shooter: framework-free game state + update + render, driven by the
-// overlay's rAF loop. Coordinates are CSS pixels inside the field.
+// Meteor shooter rules, with no DOM or canvas in here: easy to tune, and to
+// simulate outside the browser (pass your own `rand`).
+//
+// The ship follows the pointer and fires on its own. Meteors fall from the
+// top; a large one splits into two medium, a medium into two small, scoring
+// like the original Asteroids (1979): 20 / 50 / 100.
 
+// Tuned with a simulated-player harness (bots with human-like reaction time
+// and aim noise) on a field up to 560px wide, so phones and desktops play the
+// same. Reference: 3,000 points is reached by every bot skill level in ~30s;
+// even a ship that never moves gets there in ~40% of runs.
 export const TUNING = {
+	/** The field is a portrait "arcade cabinet" column, at most this wide. */
+	fieldMaxWidth: 560,
 	lives: 3,
-	shipRadius: 14,
-	shipMaxSpeed: 1100, // px/s when chasing the pointer
-	keyboardSpeed: 520, // px/s with arrow keys
-	minShipY: 0.3, // ship can't go above 30% of the field height
-	fireEvery: 0.16, // s, auto-fire
-	bulletSpeed: 760,
-	spawnStart: 0.85, // s between meteors at t=0
-	spawnMin: 0.3,
-	rampSeconds: 100, // time to reach max difficulty
-	meteorSpeedStart: 90,
-	meteorSpeedEnd: 270,
-	invulnerable: 1.6, // s after being hit
-	// points by meteor size
-	points: { small: 60, medium: 100, large: 150 },
-	hp: { small: 1, medium: 2, large: 3 },
-	radius: { small: 13, medium: 20, large: 30 },
-} as const;
+	playerRadius: 12, // hitbox, a bit smaller than the sprite on purpose
+	playerMaxSpeed: 1100, // px/s
+	invulnerableFor: 2, // s after being hit
+	fireEvery: 0.16, // s
+	bulletSpeed: 760, // px/s
+	meteorRadius: [34, 21, 12] as const, // large, medium, small
+	meteorScore: [20, 50, 100] as const,
+	spawnEvery: 1.6, // s at the start, scaled by difficulty and field width
+	minSpawnEvery: 0.38, // s
+	fallSpeed: [70, 120] as const, // px/s at the start
+	/** Difficulty grows by +1 every `rampEvery` seconds. */
+	rampEvery: 40,
+	/** Narrower fields spawn proportionally fewer meteors. */
+	referenceWidth: 1100,
+	stars: 60,
+};
 
-type Size = "small" | "medium" | "large";
-type Vec = { x: number; y: number };
-type Meteor = Vec & { r: number; vx: number; vy: number; hp: number; size: Size; rot: number; spin: number; shape: number[]; flash: number };
-type Bullet = Vec;
-type Particle = Vec & { vx: number; vy: number; life: number; color: string };
+export type MeteorSize = 0 | 1 | 2;
+
+export type Meteor = {
+	id: number;
+	x: number;
+	y: number;
+	vx: number;
+	vy: number;
+	size: MeteorSize;
+	r: number;
+	/** Seed for the procedural pixel shape. */
+	seed: number;
+};
+
+export type Spark = { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; color: string };
+
+/** Background star; `depth` 0..1, nearer stars are bigger, brighter and faster. */
+export type Star = { x: number; y: number; depth: number };
 
 export type GameState = {
 	w: number;
 	h: number;
 	time: number;
-	ship: Vec;
-	target: Vec;
-	bullets: Bullet[];
-	meteors: Meteor[];
-	particles: Particle[];
-	stars: (Vec & { s: number })[];
 	score: number;
 	lives: number;
-	invulnUntil: number;
-	spawnIn: number;
-	fireIn: number;
 	over: boolean;
+	player: { x: number; y: number; invulnerableUntil: number };
+	meteors: Meteor[];
+	bullets: { x: number; y: number }[];
+	sparks: Spark[];
+	stars: Star[];
+	spawnTimer: number;
+	fireTimer: number;
+	nextId: number;
 };
 
-export function createGame(w: number, h: number): GameState {
-	const ship = { x: w / 2, y: h * 0.82 };
+export type GameEvent = { type: "meteorDestroyed"; size: MeteorSize } | { type: "playerHit" } | { type: "gameOver" };
+
+export type Rand = () => number;
+
+const between = (rand: Rand, min: number, max: number) => min + rand() * (max - min);
+const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+
+export function createGame(w: number, h: number, rand: Rand = Math.random): GameState {
 	return {
 		w,
 		h,
 		time: 0,
-		ship,
-		target: { ...ship },
-		bullets: [],
-		meteors: [],
-		particles: [],
-		stars: Array.from({ length: 60 }, () => ({ x: Math.random() * w, y: Math.random() * h, s: Math.random() })),
 		score: 0,
 		lives: TUNING.lives,
-		invulnUntil: 0,
-		spawnIn: 0.6,
-		fireIn: 0,
 		over: false,
+		player: { x: w / 2, y: h - 90, invulnerableUntil: 0 },
+		meteors: [],
+		bullets: [],
+		sparks: [],
+		stars: Array.from({ length: TUNING.stars }, () => ({ x: rand() * w, y: rand() * h, depth: rand() })),
+		spawnTimer: 0.6,
+		fireTimer: 0,
+		nextId: 1,
 	};
 }
 
 export function resizeGame(g: GameState, w: number, h: number) {
-	const sx = w / g.w;
-	const sy = h / g.h;
-	g.ship.x *= sx;
-	g.ship.y *= sy;
-	g.target.x *= sx;
-	g.target.y *= sy;
+	for (const s of g.stars) {
+		s.x *= w / g.w;
+		s.y *= h / g.h;
+	}
 	g.w = w;
 	g.h = h;
+	g.player.x = clamp(g.player.x, 0, w);
+	g.player.y = clamp(g.player.y, 0, h);
 }
 
-export function setTarget(g: GameState, x: number, y: number) {
-	g.target.x = clamp(x, TUNING.shipRadius, g.w - TUNING.shipRadius);
-	g.target.y = clamp(y, g.h * TUNING.minShipY, g.h - TUNING.shipRadius);
-}
+export const difficulty = (g: GameState) => 1 + g.time / TUNING.rampEvery;
 
-const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-
-function difficulty(g: GameState) {
-	return Math.min(g.time / TUNING.rampSeconds, 1);
-}
-
-function spawnMeteor(g: GameState) {
-	const roll = Math.random();
-	const size: Size = roll < 0.45 ? "small" : roll < 0.8 ? "medium" : "large";
-	const r = TUNING.radius[size];
-	const d = difficulty(g);
-	const speed = TUNING.meteorSpeedStart + (TUNING.meteorSpeedEnd - TUNING.meteorSpeedStart) * d;
-	const sizeFactor = size === "small" ? 1.2 : size === "medium" ? 1 : 0.8;
+function spawnMeteor(g: GameState, rand: Rand) {
+	const r = TUNING.meteorRadius[0];
 	g.meteors.push({
-		x: r + Math.random() * (g.w - r * 2),
+		id: g.nextId++,
+		x: between(rand, r, g.w - r),
 		y: -r,
+		vx: between(rand, -35, 35),
+		vy: between(rand, TUNING.fallSpeed[0], TUNING.fallSpeed[1]) * Math.sqrt(difficulty(g)),
+		size: 0,
 		r,
-		vx: (Math.random() - 0.5) * 60,
-		vy: speed * sizeFactor * (0.85 + Math.random() * 0.3),
-		hp: TUNING.hp[size],
-		size,
-		rot: Math.random() * Math.PI,
-		spin: (Math.random() - 0.5) * 2,
-		shape: Array.from({ length: 9 }, () => 0.75 + Math.random() * 0.3),
-		flash: 0,
+		seed: rand(),
 	});
 }
 
-function burst(g: GameState, x: number, y: number, n: number, color: string) {
-	for (let i = 0; i < n; i++) {
-		const a = Math.random() * Math.PI * 2;
-		const s = 60 + Math.random() * 220;
-		g.particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.4 + Math.random() * 0.4, color });
+function burst(g: GameState, x: number, y: number, count: number, colors: string[], rand: Rand) {
+	for (let i = 0; i < count; i++) {
+		const angle = rand() * Math.PI * 2;
+		const speed = between(rand, 60, 260);
+		const life = between(rand, 0.3, 0.8);
+		g.sparks.push({
+			x,
+			y,
+			vx: Math.cos(angle) * speed,
+			vy: Math.sin(angle) * speed,
+			life,
+			maxLife: life,
+			color: colors[Math.floor(rand() * colors.length)],
+		});
 	}
 }
 
-/** Advances the game by dt seconds. Returns points scored this step. */
-export function updateGame(g: GameState, dt: number, keys: Vec | null): number {
-	if (g.over) return 0;
-	g.time += dt;
-	let gained = 0;
+const ROCK_DUST = ["#a1a1aa", "#71717a", "#d4d4d8"];
+const SHIP_DEBRIS = ["#fb923c", "#fde047", "#f4f4f5"];
 
-	// Ship movement: arrows drive the target, then the ship chases it.
-	if (keys && (keys.x || keys.y)) {
-		setTarget(g, g.ship.x + keys.x * TUNING.keyboardSpeed * dt * 3, g.ship.y + keys.y * TUNING.keyboardSpeed * dt * 3);
-		const step = TUNING.keyboardSpeed * dt;
-		const dx = g.target.x - g.ship.x;
-		const dy = g.target.y - g.ship.y;
-		const dist = Math.hypot(dx, dy) || 1;
-		g.ship.x += (dx / dist) * Math.min(step, dist);
-		g.ship.y += (dy / dist) * Math.min(step, dist);
-	} else {
-		const dx = g.target.x - g.ship.x;
-		const dy = g.target.y - g.ship.y;
-		const dist = Math.hypot(dx, dy);
-		const step = TUNING.shipMaxSpeed * dt;
-		if (dist <= step) {
-			g.ship.x = g.target.x;
-			g.ship.y = g.target.y;
-		} else {
-			g.ship.x += (dx / dist) * step;
-			g.ship.y += (dy / dist) * step;
+/** Background drift: always on, even on the intro and pause screens. */
+export function driftStars(g: GameState, dt: number, rand: Rand = Math.random) {
+	for (const s of g.stars) {
+		s.y += (20 + s.depth * 60) * dt;
+		if (s.y > g.h) {
+			s.y = 0;
+			s.x = rand() * g.w;
 		}
 	}
+}
 
-	// Auto-fire.
-	g.fireIn -= dt;
-	if (g.fireIn <= 0) {
-		g.fireIn = TUNING.fireEvery;
-		g.bullets.push({ x: g.ship.x, y: g.ship.y - TUNING.shipRadius });
+/**
+ * Advances the game by `dt` seconds. `target` is where the player wants the
+ * ship (the pointer). Returns what happened during the step.
+ */
+export function step(g: GameState, dt: number, target: { x: number; y: number }, rand: Rand = Math.random): GameEvent[] {
+	const events: GameEvent[] = [];
+	g.time += dt;
+
+	// Sparks outlive the game, so the final explosion plays out.
+	for (const s of g.sparks) {
+		s.x += s.vx * dt;
+		s.y += s.vy * dt;
+		s.vx *= 0.96;
+		s.vy *= 0.96;
+		s.life -= dt;
+	}
+	g.sparks = g.sparks.filter((s) => s.life > 0);
+	if (g.over) return events;
+
+	// Ship: towards the target, capped by its max speed.
+	const p = g.player;
+	const dx = target.x - p.x;
+	const dy = target.y - p.y;
+	const dist = Math.hypot(dx, dy);
+	const reach = TUNING.playerMaxSpeed * dt;
+	if (dist > reach) {
+		p.x += (dx / dist) * reach;
+		p.y += (dy / dist) * reach;
+	} else {
+		p.x = target.x;
+		p.y = target.y;
+	}
+	p.x = clamp(p.x, 16, g.w - 16);
+	p.y = clamp(p.y, 60, g.h - 24);
+
+	g.fireTimer -= dt;
+	if (g.fireTimer <= 0) {
+		g.fireTimer = TUNING.fireEvery;
+		g.bullets.push({ x: p.x, y: p.y - 26 });
 	}
 	for (const b of g.bullets) b.y -= TUNING.bulletSpeed * dt;
-	g.bullets = g.bullets.filter((b) => b.y > -10);
 
-	// Spawning.
-	g.spawnIn -= dt;
-	if (g.spawnIn <= 0) {
-		spawnMeteor(g);
-		const d = difficulty(g);
-		g.spawnIn = TUNING.spawnStart + (TUNING.spawnMin - TUNING.spawnStart) * d;
-		// Narrow fields get fewer meteors so phones aren't harder than desktop.
-		g.spawnIn *= clamp(480 / g.w, 1, 1.35);
+	const d = difficulty(g);
+	const widthFactor = clamp(TUNING.referenceWidth / g.w, 1, 2.2);
+	g.spawnTimer -= dt;
+	if (g.spawnTimer <= 0) {
+		spawnMeteor(g, rand);
+		g.spawnTimer = Math.max(TUNING.minSpawnEvery * widthFactor, (TUNING.spawnEvery * widthFactor) / d);
 	}
-
 	for (const m of g.meteors) {
 		m.x += m.vx * dt;
 		m.y += m.vy * dt;
-		m.rot += m.spin * dt;
-		m.flash = Math.max(0, m.flash - dt);
-		if (m.x < m.r || m.x > g.w - m.r) m.vx *= -1;
 	}
 
-	// Bullet vs meteor.
-	for (const b of g.bullets) {
-		for (const m of g.meteors) {
-			if (m.hp > 0 && Math.hypot(b.x - m.x, b.y - m.y) < m.r) {
-				b.y = -100;
-				m.hp -= 1;
-				m.flash = 0.08;
-				if (m.hp <= 0) {
-					gained += TUNING.points[m.size];
-					burst(g, m.x, m.y, m.size === "large" ? 18 : 10, "#d4d4d8");
-				}
-				break;
+	// Bullets vs meteors: a hit meteor splits in two smaller ones.
+	const pieces: Meteor[] = [];
+	const destroyed = new Set<number>();
+	g.bullets = g.bullets.filter((b) => {
+		const m = g.meteors.find((rock) => !destroyed.has(rock.id) && Math.hypot(b.x - rock.x, b.y - rock.y) <= rock.r + 3);
+		if (!m) return b.y > -20;
+		destroyed.add(m.id);
+		g.score += TUNING.meteorScore[m.size];
+		events.push({ type: "meteorDestroyed", size: m.size });
+		burst(g, m.x, m.y, 6 + (2 - m.size) * 6, ROCK_DUST, rand);
+		if (m.size < 2) {
+			const size = (m.size + 1) as MeteorSize;
+			for (const dir of [-1, 1]) {
+				pieces.push({
+					id: g.nextId++,
+					x: m.x + dir * m.r * 0.4,
+					y: m.y,
+					vx: dir * between(rand, 50, 120) + m.vx * 0.5,
+					vy: m.vy * between(rand, 0.9, 1.25),
+					size,
+					r: TUNING.meteorRadius[size],
+					seed: rand(),
+				});
+			}
+		}
+		return false;
+	});
+	g.meteors = g.meteors
+		.filter((m) => !destroyed.has(m.id))
+		.concat(pieces)
+		.filter((m) => m.y - m.r < g.h + 10 && m.x + m.r > -40 && m.x - m.r < g.w + 40);
+
+	// Meteors vs ship.
+	if (g.time >= p.invulnerableUntil) {
+		const hit = g.meteors.find((m) => Math.hypot(m.x - p.x, m.y - p.y) <= m.r + TUNING.playerRadius);
+		if (hit) {
+			g.lives -= 1;
+			g.meteors = g.meteors.filter((m) => m.id !== hit.id);
+			burst(g, p.x, p.y, 28, SHIP_DEBRIS, rand);
+			if (g.lives <= 0) {
+				g.over = true;
+				events.push({ type: "gameOver" });
+			} else {
+				p.invulnerableUntil = g.time + TUNING.invulnerableFor;
+				events.push({ type: "playerHit" });
 			}
 		}
 	}
-
-	// Meteor vs ship.
-	if (g.time >= g.invulnUntil) {
-		for (const m of g.meteors) {
-			if (m.hp > 0 && Math.hypot(g.ship.x - m.x, g.ship.y - m.y) < m.r + TUNING.shipRadius * 0.75) {
-				m.hp = 0;
-				g.lives -= 1;
-				g.invulnUntil = g.time + TUNING.invulnerable;
-				burst(g, g.ship.x, g.ship.y, 24, "#fb923c");
-				if (g.lives <= 0) g.over = true;
-				break;
-			}
-		}
-	}
-	g.meteors = g.meteors.filter((m) => m.hp > 0 && m.y < g.h + m.r);
-
-	for (const p of g.particles) {
-		p.x += p.vx * dt;
-		p.y += p.vy * dt;
-		p.vx *= 0.96;
-		p.vy *= 0.96;
-		p.life -= dt;
-	}
-	g.particles = g.particles.filter((p) => p.life > 0);
-
-	for (const s of g.stars) {
-		s.y += (20 + s.s * 60) * dt;
-		if (s.y > g.h) {
-			s.y = 0;
-			s.x = Math.random() * g.w;
-		}
-	}
-
-	g.score += gained;
-	return gained;
-}
-
-export function renderGame(ctx: CanvasRenderingContext2D, g: GameState, shipImg: CanvasImageSource | null) {
-	ctx.clearRect(0, 0, g.w, g.h);
-	for (const s of g.stars) {
-		ctx.fillStyle = `rgba(255,255,255,${0.2 + s.s * 0.5})`;
-		ctx.fillRect(s.x, s.y, s.s > 0.7 ? 2 : 1, s.s > 0.7 ? 2 : 1);
-	}
-
-	ctx.fillStyle = "#fde047";
-	for (const b of g.bullets) ctx.fillRect(b.x - 1.5, b.y - 6, 3, 10);
-
-	for (const m of g.meteors) {
-		ctx.save();
-		ctx.translate(m.x, m.y);
-		ctx.rotate(m.rot);
-		ctx.beginPath();
-		m.shape.forEach((k, i) => {
-			const a = (i / m.shape.length) * Math.PI * 2;
-			const px = Math.cos(a) * m.r * k;
-			const py = Math.sin(a) * m.r * k;
-			i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-		});
-		ctx.closePath();
-		ctx.fillStyle = m.flash > 0 ? "#ffffff" : "#3f3f46";
-		ctx.strokeStyle = "#a1a1aa";
-		ctx.lineWidth = 2;
-		ctx.fill();
-		ctx.stroke();
-		ctx.restore();
-	}
-
-	for (const p of g.particles) {
-		ctx.globalAlpha = Math.max(p.life * 1.8, 0);
-		ctx.fillStyle = p.color;
-		ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
-	}
-	ctx.globalAlpha = 1;
-
-	const blinking = g.time < g.invulnUntil && Math.floor(g.time * 10) % 2 === 0;
-	if (!g.over && !blinking && shipImg) {
-		const size = TUNING.shipRadius * 3.2;
-		ctx.save();
-		ctx.translate(g.ship.x, g.ship.y);
-		ctx.rotate(-Math.PI / 2); // sprite points right, the game ship points up
-		ctx.imageSmoothingEnabled = false;
-		ctx.drawImage(shipImg, -size / 2, -size / 2, size, size);
-		ctx.restore();
-	}
+	return events;
 }

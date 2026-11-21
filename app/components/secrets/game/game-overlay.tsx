@@ -1,247 +1,271 @@
 "use client";
+import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { SCORE_TARGET } from "../config";
-import { RAIDER } from "../pixel-art";
+import { track } from "../../umami";
+import { BEST_SCORE_KEY, SCORE_TARGET, SECRETS } from "../config";
+import { Eyebrow, buttonClass } from "../dialog";
 import { PrizeContent } from "../prize";
-import { useSecrets } from "../secrets-context";
-import { GameState, TUNING, createGame, renderGame, resizeGame, setTarget, updateGame } from "./engine";
+import { GameState, TUNING, createGame, driftStars, resizeGame, step } from "./engine";
+import { MeteorCache, render } from "./render";
+
+// Default export: loaded with next/dynamic, only when someone opens the game.
 
 type Status = "intro" | "countdown" | "playing" | "paused" | "won" | "over";
 
-const BEST_KEY = "thealmeida:best";
-const TOUCH_OFFSET = 72; // ship sits above the finger so it stays visible
-const KEYS: Record<string, [number, number]> = {
-	ArrowLeft: [-1, 0],
-	ArrowRight: [1, 0],
-	ArrowUp: [0, -1],
-	ArrowDown: [0, 1],
+type GameOverlayProps = {
+	/** This catch just unlocked secret #2 (vs. replaying from the counter). */
+	justFound: boolean;
+	/** Secret #3 was already won before this session. */
+	alreadyWon: boolean;
+	onWin: () => void;
+	onClose: () => void;
 };
 
-function spriteImage(): HTMLCanvasElement {
-	const rows = RAIDER.rows;
-	const c = document.createElement("canvas");
-	c.width = rows[0].length;
-	c.height = rows.length;
-	const ctx = c.getContext("2d")!;
-	rows.forEach((row, y) =>
-		Array.from(row).forEach((ch, x) => {
-			if (ch === ".") return;
-			ctx.fillStyle = RAIDER.palette[ch];
-			ctx.fillRect(x, y, 1, 1);
-		}),
-	);
-	return c;
-}
+const TOUCH_OFFSET = 72; // the ship sits above the finger, so it stays visible
+const KEY_SPEED = 650; // px/s when steering with the keyboard
+const DEATH_PAUSE_MS = 900; // let the final explosion play before "Game over"
+const KEYS: Record<string, "left" | "right" | "up" | "down"> = {
+	ArrowLeft: "left",
+	a: "left",
+	ArrowRight: "right",
+	d: "right",
+	ArrowUp: "up",
+	w: "up",
+	ArrowDown: "down",
+	s: "down",
+};
+
+const fmt = (n: number) => n.toLocaleString("en-US");
 
 function readBest() {
 	try {
-		return Number(window.localStorage.getItem(BEST_KEY)) || 0;
+		return Number(window.localStorage.getItem(BEST_SCORE_KEY)) || 0;
 	} catch {
 		return 0;
 	}
 }
 
-export const GameOverlay: React.FC = () => {
-	const { overlay, setOverlay } = useSecrets();
-	if (overlay !== "game") return null;
-	return <Game onClose={() => setOverlay(null)} />;
-};
+function saveBest(score: number) {
+	try {
+		if (score > readBest()) window.localStorage.setItem(BEST_SCORE_KEY, String(score));
+	} catch {
+		// Storage blocked: the best score just won't persist.
+	}
+}
 
-const Game: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-	const { isFound, markFound } = useSecrets();
+export default function GameOverlay({ justFound, alreadyWon, onWin, onClose }: GameOverlayProps) {
 	const field = useRef<HTMLDivElement>(null);
 	const canvas = useRef<HTMLCanvasElement>(null);
 	const game = useRef<GameState | null>(null);
+	const target = useRef({ x: 0, y: 0 });
 	const keys = useRef(new Set<string>());
-	const ship = useRef<HTMLCanvasElement | null>(null);
-	const prizeUnlocked = useRef(isFound("score"));
-	const [status, setStatus] = useState<Status>("intro");
 	const statusRef = useRef<Status>("intro");
-	const [count, setCount] = useState(3);
+	const won = useRef(alreadyWon);
+	const [status, setStatusState] = useState<Status>("intro");
 	const [score, setScore] = useState(0);
-	const [lives, setLives] = useState<number>(TUNING.lives);
+	const [lives, setLives] = useState(TUNING.lives);
 	const [best, setBest] = useState(0);
-	const [endless, setEndless] = useState(prizeUnlocked.current);
+	const [count, setCount] = useState(3);
+	// Callbacks through refs, so a parent re-render never restarts the loop.
+	const onWinRef = useRef(onWin);
+	const onCloseRef = useRef(onClose);
+	onWinRef.current = onWin;
+	onCloseRef.current = onClose;
 
-	const go = (s: Status) => {
-		statusRef.current = s;
-		setStatus(s);
-	};
-
-	// Canvas sizing (DPR aware).
-	useEffect(() => {
-		ship.current = spriteImage();
-		setBest(readBest());
-		const fit = () => {
-			const f = field.current;
-			const c = canvas.current;
-			if (!f || !c) return;
-			const w = f.clientWidth;
-			const h = f.clientHeight;
-			const dpr = window.devicePixelRatio || 1;
-			c.width = w * dpr;
-			c.height = h * dpr;
-			c.getContext("2d")?.setTransform(dpr, 0, 0, dpr, 0, 0);
-			if (game.current) resizeGame(game.current, w, h);
-			else game.current = createGame(w, h);
-			const ctx = c.getContext("2d");
-			if (ctx && game.current) renderGame(ctx, game.current, ship.current);
-		};
-		fit();
-		window.addEventListener("resize", fit);
-		const prevOverflow = document.body.style.overflow;
-		document.body.style.overflow = "hidden";
-		return () => {
-			window.removeEventListener("resize", fit);
-			document.body.style.overflow = prevOverflow;
-		};
+	const setStatus = useCallback((next: Status) => {
+		statusRef.current = next;
+		setStatusState(next);
 	}, []);
 
-	const startCountdown = useCallback(() => {
+	useEffect(() => setBest(readBest()), []);
+
+	const countdown = useCallback(() => {
 		setCount(3);
-		go("countdown");
-	}, []);
+		setStatus("countdown");
+	}, [setStatus]);
 
-	const newRun = useCallback(() => {
+	const launch = useCallback(() => {
 		const f = field.current;
 		if (!f) return;
-		game.current = createGame(f.clientWidth, f.clientHeight);
+		const { width, height } = f.getBoundingClientRect();
+		game.current = createGame(width, height);
+		target.current = { x: game.current.player.x, y: game.current.player.y };
 		setScore(0);
 		setLives(TUNING.lives);
-		startCountdown();
-	}, [startCountdown]);
+		track("game_started", { endless: won.current });
+		setStatus("playing");
+	}, [setStatus]);
 
-	// Countdown: ticks only while the tab is visible, so a visitor who went to
-	// the booking tab comes back to a fresh 3-2-1.
+	// 3-2-1. It only counts while this tab is visible and focused: someone who
+	// just opened the booking link in a new tab comes back to a full countdown.
 	useEffect(() => {
 		if (status !== "countdown") return;
 		const t = window.setInterval(() => {
-			if (document.hidden) {
+			if (document.hidden || !document.hasFocus()) {
 				setCount(3);
 				return;
 			}
 			setCount((c) => {
-				if (c <= 1) {
-					go("playing");
-					return 0;
-				}
-				return c - 1;
+				if (c > 1) return c - 1;
+				setStatus("playing");
+				return 0;
 			});
 		}, 1000);
-		return () => clearInterval(t);
-	}, [status]);
+		return () => window.clearInterval(t);
+	}, [status, setStatus]);
 
-	// Pause when the tab is hidden mid-game, resume with a countdown.
+	// Hiding the tab mid-run pauses it; coming back resumes with a countdown.
 	useEffect(() => {
-		const onVis = () => {
-			if (document.hidden && statusRef.current === "playing") go("paused");
-			else if (!document.hidden && statusRef.current === "paused") startCountdown();
+		const onVisibility = () => {
+			if (document.hidden && statusRef.current === "playing") setStatus("paused");
+			else if (!document.hidden && statusRef.current === "paused") countdown();
 		};
-		document.addEventListener("visibilitychange", onVis);
-		return () => document.removeEventListener("visibilitychange", onVis);
-	}, [startCountdown]);
+		document.addEventListener("visibilitychange", onVisibility);
+		return () => document.removeEventListener("visibilitychange", onVisibility);
+	}, [countdown, setStatus]);
 
-	// Main loop.
+	// Canvas sizing and the render/update loop, for the overlay's whole life.
 	useEffect(() => {
-		if (status !== "playing") return;
-		let raf = 0;
+		const c = canvas.current;
+		const f = field.current;
+		const ctx = c?.getContext("2d");
+		if (!c || !f || !ctx) return;
+
+		const dpr = window.devicePixelRatio || 1;
+		const fit = () => {
+			const { width, height } = f.getBoundingClientRect();
+			c.width = Math.round(width * dpr);
+			c.height = Math.round(height * dpr);
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.imageSmoothingEnabled = false;
+			if (game.current) resizeGame(game.current, width, height);
+			// The intro already shows the starfield, behind the panel.
+			else game.current = createGame(width, height);
+		};
+		fit();
+		const observer = new ResizeObserver(fit);
+		observer.observe(f);
+
+		const cache: MeteorCache = new Map();
+		let frame = 0;
 		let last = performance.now();
-		const ctx = canvas.current?.getContext("2d");
-		const step = (now: number) => {
-			const g = game.current;
-			if (!g || !ctx) return;
-			const dt = Math.min((now - last) / 1000, 0.05);
+		const loop = (now: number) => {
+			const dt = Math.min((now - last) / 1000, 1 / 30);
 			last = now;
-			let kx = 0;
-			let ky = 0;
-			keys.current.forEach((k) => {
-				kx += KEYS[k][0];
-				ky += KEYS[k][1];
-			});
-			const gained = updateGame(g, dt, { x: kx, y: ky });
-			renderGame(ctx, g, ship.current);
-			if (gained) setScore(g.score);
-			setLives(g.lives);
-			if (!prizeUnlocked.current && g.score >= SCORE_TARGET) {
-				prizeUnlocked.current = true;
-				markFound("score");
-				setEndless(true);
-				go("won");
-				return;
-			}
-			if (g.over) {
-				if (g.score > readBest()) {
-					try {
-						window.localStorage.setItem(BEST_KEY, String(g.score));
-					} catch {}
-				}
-				setBest(readBest());
-				go("over");
-				return;
-			}
-			raf = requestAnimationFrame(step);
-		};
-		raf = requestAnimationFrame(step);
-		return () => cancelAnimationFrame(raf);
-	}, [status, markFound]);
+			const g = game.current;
+			const s = statusRef.current;
+			if (g && s !== "paused") driftStars(g, dt);
 
-	// Keyboard: arrows move, Esc closes.
+			// "over" keeps stepping so the sparks of the last explosion finish.
+			if (g && (s === "playing" || s === "over")) {
+				const k = keys.current;
+				const kx = (k.has("right") ? 1 : 0) - (k.has("left") ? 1 : 0);
+				const ky = (k.has("down") ? 1 : 0) - (k.has("up") ? 1 : 0);
+				if (kx || ky) {
+					target.current = { x: g.player.x + kx * KEY_SPEED * dt, y: g.player.y + ky * KEY_SPEED * dt };
+				}
+				for (const e of step(g, dt, target.current)) {
+					if (e.type === "meteorDestroyed") setScore(g.score);
+					if (e.type === "playerHit") setLives(g.lives);
+					if (e.type === "gameOver") {
+						setLives(0);
+						saveBest(g.score);
+						setBest(readBest());
+						track("game_over", { score: g.score });
+						window.setTimeout(() => setStatus("over"), DEATH_PAUSE_MS);
+					}
+				}
+				if (!won.current && !g.over && g.score >= SCORE_TARGET) {
+					won.current = true;
+					onWinRef.current();
+					setStatus("won");
+				}
+			}
+			render(ctx, g, now, cache);
+			frame = requestAnimationFrame(loop);
+		};
+		frame = requestAnimationFrame(loop);
+		return () => {
+			cancelAnimationFrame(frame);
+			observer.disconnect();
+		};
+	}, [setStatus]);
+
+	// Keyboard: Esc closes, arrows / WASD steer.
 	useEffect(() => {
 		const down = (e: KeyboardEvent) => {
-			if (e.key === "Escape") return onClose();
-			if (KEYS[e.key]) {
+			if (e.key === "Escape") return onCloseRef.current();
+			const dir = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+			if (dir && statusRef.current === "playing") {
 				e.preventDefault();
-				keys.current.add(e.key);
+				keys.current.add(dir);
 			}
 		};
-		const up = (e: KeyboardEvent) => keys.current.delete(e.key);
+		const up = (e: KeyboardEvent) => {
+			const dir = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+			if (dir) keys.current.delete(dir);
+		};
 		window.addEventListener("keydown", down);
 		window.addEventListener("keyup", up);
 		return () => {
 			window.removeEventListener("keydown", down);
 			window.removeEventListener("keyup", up);
 		};
-	}, [onClose]);
+	}, []);
 
+	// Tracked on the whole overlay: on desktop the ship keeps following the
+	// pointer even outside the (narrower) play field.
 	const onPointer = (e: React.PointerEvent) => {
-		const g = game.current;
-		const c = canvas.current;
-		if (!g || !c) return;
-		const r = c.getBoundingClientRect();
-		const touch = e.pointerType !== "mouse";
-		setTarget(g, e.clientX - r.left, e.clientY - r.top - (touch ? TOUCH_OFFSET : 0));
+		const r = field.current?.getBoundingClientRect();
+		if (!r) return;
+		const offset = e.pointerType === "touch" ? TOUCH_OFFSET : 0;
+		target.current = { x: e.clientX - r.left, y: e.clientY - r.top - offset };
 	};
 
 	const progress = Math.min(score / SCORE_TARGET, 1);
+	const endless = alreadyWon || won.current;
 
 	return (
-		<div
-			className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm sm:p-4 animate-dialog-in"
+		<motion.div
 			role="dialog"
 			aria-modal="true"
 			aria-label="Meteor shooter mini game"
+			className={`fixed inset-0 z-50 flex justify-center bg-black/80 backdrop-blur-sm touch-none ${
+				status === "playing" ? "cursor-none" : ""
+			}`}
+			onPointerMove={onPointer}
+			onPointerDown={onPointer}
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
 		>
+			{/* The portrait "arcade cabinet" */}
 			<div
 				ref={field}
-				className="relative w-full h-full overflow-hidden border-zinc-700 bg-zinc-950 sm:border sm:rounded-2xl sm:max-w-[560px] sm:max-h-[900px] select-none"
+				className="relative w-full h-full overflow-hidden select-none bg-zinc-950 sm:border-x sm:border-zinc-800"
+				style={{ maxWidth: TUNING.fieldMaxWidth }}
 			>
-				<canvas
-					ref={canvas}
-					className="absolute inset-0 w-full h-full cursor-none touch-none"
-					onPointerMove={onPointer}
-					onPointerDown={onPointer}
-				/>
+				<canvas ref={canvas} className="absolute inset-0 w-full h-full" />
 
-				{/* HUD */}
 				<div className="absolute inset-x-0 top-0 flex items-start justify-between gap-4 p-4 font-mono pointer-events-none text-zinc-300">
-					<div className="flex-1">
-						<p className="text-lg tabular-nums">{score.toLocaleString("en-US")}</p>
+					<div>
+						<p className="text-2xl tabular-nums text-zinc-100">{fmt(score)}</p>
 						{endless ? (
-							<p className="mt-1 text-xs text-amber-300">✦ Prize unlocked · endless mode</p>
+							<p className="mt-2 text-[10px] uppercase tracking-widest whitespace-nowrap text-amber-300/80">
+								✦ Prize unlocked · endless mode
+							</p>
 						) : (
-							<div className="w-40 h-1.5 mt-2 overflow-hidden rounded-full bg-zinc-800">
-								<div className="h-full bg-amber-300 transition-[width] duration-200" style={{ width: `${progress * 100}%` }} />
+							<div className="w-48 mt-2">
+								<div className="h-1 overflow-hidden rounded-full bg-zinc-800">
+									<div
+										className="h-full bg-amber-300 transition-[width] duration-300"
+										style={{ width: `${progress * 100}%` }}
+									/>
+								</div>
+								<p className="mt-1 text-[10px] uppercase tracking-widest whitespace-nowrap text-zinc-500">
+									✦ {fmt(SCORE_TARGET)} unlocks the last secret
+								</p>
 							</div>
 						)}
 					</div>
@@ -250,50 +274,57 @@ const Game: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 						<span className="text-zinc-700">{"▲".repeat(TUNING.lives - Math.max(lives, 0))}</span>
 					</p>
 				</div>
-				<button
-					type="button"
-					onClick={onClose}
-					aria-label="Close game"
-					className="absolute p-1 duration-200 rounded-md top-3 right-3 text-zinc-500 hover:text-zinc-200"
-				>
-					<X className="w-6 h-6" />
-				</button>
 
 				{status === "intro" ? (
 					<Panel>
-						{endless ? (
-							<>
-								<Eyebrow>Meteor shooter · endless mode</Eyebrow>
-								<h2 className="mt-4 text-3xl text-zinc-100 font-display">Back for more?</h2>
-								<p className="mt-4 text-zinc-400">Best score: {best.toLocaleString("en-US")}</p>
-							</>
-						) : (
-							<>
-								<Eyebrow>✦ Secret 2 of 3 found ✦</Eyebrow>
-								<h2 className="mt-4 text-3xl text-zinc-100 font-display">You caught a ship!</h2>
-								<p className="mt-4 text-zinc-400">
-									Last secret: score <strong className="text-zinc-200">{SCORE_TARGET.toLocaleString("en-US")}</strong> points
-									to unlock the prize.
-								</p>
-							</>
-						)}
-						<Controls />
-						<PrimaryButton onClick={newRun}>Start</PrimaryButton>
+						{justFound ? <Eyebrow>✦ Secret 2 of {SECRETS.length} ✦</Eyebrow> : null}
+						<h2 className="mt-3 text-3xl font-display text-zinc-100">
+							{justFound ? "Welcome aboard, pilot." : "Welcome back, pilot."}
+						</h2>
+						<p className="mt-4 text-zinc-300">
+							{alreadyWon
+								? "Every secret is already yours. Back for a high score?"
+								: `Score ${fmt(SCORE_TARGET)} points to unlock the last secret.`}
+						</p>
+						<ul className="mt-5 space-y-1 font-mono text-sm text-zinc-500">
+							<li>
+								<span className="hidden sm:inline">Mouse, arrows or WASD to move</span>
+								<span className="sm:hidden">Drag your finger to move</span>
+							</li>
+							<li>Your ship fires on its own</li>
+							<li>Dodge the meteors · {TUNING.lives} lives</li>
+						</ul>
+						{best > 0 ? <p className="mt-4 font-mono text-xs text-zinc-500">Best: {fmt(best)}</p> : null}
+						<button type="button" onClick={launch} autoFocus className={`mt-8 ${buttonClass()}`}>
+							Launch
+						</button>
 					</Panel>
 				) : null}
 
 				{status === "countdown" || status === "paused" ? (
-					<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-						<span key={count} className="text-8xl text-zinc-100 font-display animate-dialog-in">
-							{status === "paused" ? "II" : count || "GO"}
-						</span>
+					<div
+						className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+						aria-live="polite"
+					>
+						<motion.p
+							key={status === "paused" ? "paused" : count}
+							initial={{ scale: 1.6, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							className="font-display text-8xl text-zinc-100"
+						>
+							{status === "paused" ? "II" : count}
+						</motion.p>
+						<p className="mt-4 font-mono text-sm text-zinc-400">
+							{status === "paused" ? "Paused" : "Get ready, pilot"}
+						</p>
 					</div>
 				) : null}
 
 				{status === "won" ? (
 					<Panel>
-						<PrizeContent titleId="game-prize-title" onSchedule={startCountdown} />
-						<button type="button" onClick={startCountdown} className="block mx-auto mt-4 text-sm underline text-zinc-400 hover:text-zinc-200 underline-offset-4">
+						<PrizeContent titleId="game-prize-title" onSchedule={countdown} />
+						<p className="mt-6 text-sm text-zinc-500">The game goes on as long as you like.</p>
+						<button type="button" onClick={countdown} className={`mt-3 ${buttonClass("ghost")}`}>
 							Keep playing
 						</button>
 					</Panel>
@@ -302,48 +333,47 @@ const Game: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 				{status === "over" ? (
 					<Panel>
 						<Eyebrow>Game over</Eyebrow>
-						<p className="mt-4 text-5xl tabular-nums text-zinc-100 font-display">{score.toLocaleString("en-US")}</p>
-						<p className="mt-2 text-zinc-500">Best: {best.toLocaleString("en-US")}</p>
+						<p className="mt-4 text-5xl tabular-nums text-zinc-100 font-display">{fmt(score)}</p>
+						<p className="mt-2 font-mono text-sm text-zinc-500">Best: {fmt(best)}</p>
 						{!endless ? (
 							<p className="mt-4 text-zinc-400">
-								{(SCORE_TARGET - score).toLocaleString("en-US")} points to go. You've got this.
+								{score >= SCORE_TARGET * 0.6
+									? `So close! Only ${fmt(SCORE_TARGET - score)} to go.`
+									: "Meteors: 1, pilot: 0. Another round?"}
 							</p>
 						) : null}
-						<PrimaryButton onClick={newRun}>Try again</PrimaryButton>
+						<div className="flex justify-center gap-3 mt-8">
+							<button type="button" onClick={launch} autoFocus className={buttonClass()}>
+								Try again
+							</button>
+							<button type="button" onClick={onClose} className={buttonClass("ghost")}>
+								Exit
+							</button>
+						</div>
 					</Panel>
 				) : null}
 			</div>
-		</div>
+
+			<button
+				type="button"
+				onClick={onClose}
+				aria-label="Close game"
+				className="absolute p-2 duration-200 rounded-lg top-3 right-3 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60"
+			>
+				<X className="w-6 h-6" />
+			</button>
+		</motion.div>
 	);
-};
+}
 
 const Panel: React.FC<React.PropsWithChildren> = ({ children }) => (
-	<div className="absolute inset-0 flex items-center justify-center p-6 bg-zinc-950/75">
-		<div className="max-w-sm text-center animate-dialog-in">{children}</div>
+	<div className="absolute inset-0 flex items-center justify-center p-6">
+		<motion.div
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			className="w-full max-w-sm p-8 text-center border shadow-2xl rounded-2xl border-zinc-700 bg-zinc-950/90 shadow-black"
+		>
+			{children}
+		</motion.div>
 	</div>
-);
-
-const Eyebrow: React.FC<React.PropsWithChildren> = ({ children }) => (
-	<p className="font-mono text-xs tracking-[0.3em] text-amber-300/80 uppercase">{children}</p>
-);
-
-const PrimaryButton: React.FC<React.PropsWithChildren<{ onClick: () => void }>> = ({ onClick, children }) => (
-	<button
-		type="button"
-		onClick={onClick}
-		className="px-6 py-3 mt-8 font-medium duration-200 rounded-lg bg-zinc-100 text-zinc-900 hover:bg-white"
-	>
-		{children}
-	</button>
-);
-
-const Controls: React.FC = () => (
-	<ul className="mt-6 space-y-1 font-mono text-sm text-zinc-500">
-		<li>
-			<span className="hidden sm:inline">Mouse or arrow keys to move</span>
-			<span className="sm:hidden">Drag your finger to move</span>
-		</li>
-		<li>Firing is automatic</li>
-		<li>Dodge the meteors · 3 lives</li>
-	</ul>
 );
