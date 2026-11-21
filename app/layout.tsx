@@ -2,7 +2,9 @@ import "../global.css";
 import { Inter } from "next/font/google";
 import LocalFont from "next/font/local";
 import { Metadata } from "next";
+import Script from "next/script";
 import { Analytics } from "./components/analytics";
+import { UMAMI_DOMAINS, UMAMI_WEBSITE_ID } from "./components/umami";
 
 export const metadata: Metadata = {
 	title: {
@@ -67,7 +69,13 @@ export default function RootLayout({
 				className="bg-black"
 			>
 				{process.env.NODE_ENV === "development" ? <Analytics /> : undefined}
-				
+				<Script
+					src="https://cloud.umami.is/script.js"
+					data-website-id={UMAMI_WEBSITE_ID}
+					data-domains={UMAMI_DOMAINS}
+					strategy="afterInteractive"
+				/>
+
 				{children}
 			</body>
 		</html>

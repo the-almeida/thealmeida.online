@@ -98,7 +98,7 @@ export const NameTrigger: React.FC<{ text: string }> = ({ text }) => {
 		window.setTimeout(
 			() => {
 				busy.current = false;
-				if (markFound("name")) setOverlay("found-name");
+				if (markFound("name")) setOverlay("intro");
 			},
 			reducedMotion ? 0 : SCATTER_MS,
 		);

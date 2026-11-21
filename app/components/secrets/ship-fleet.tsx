@@ -1,8 +1,9 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { SHIPS_CYCLE_MS, SHIPS_VISIBLE_MS } from "./config";
+const SHIPS_CYCLE_MS = 15000;
+const SHIPS_VISIBLE_MS = 10000;
 import { FAST_SHIP, PixelSprite, SLOW_SHIP } from "./pixel-art";
-import { BADGE_ID } from "./secrets-badge";
+
 import { useSecrets } from "./secrets-context";
 
 // Secret #2: two pixel-art ships fly for SHIPS_VISIBLE_MS out of every
@@ -154,7 +155,7 @@ const SlowShip: React.FC<{ onCatch: () => void }> = ({ onCatch }) => {
 	useEffect(() => {
 		const vw = window.innerWidth;
 		const vh = window.innerHeight;
-		const badge = document.getElementById(BADGE_ID)?.getBoundingClientRect();
+		const badge = document.querySelector("[data-secrets-badge]")?.getBoundingClientRect();
 		// Quadratic Bezier = parabola: bottom-left -> high arc -> the counter.
 		const p0: Vec = { x: -SLOW_SIZE, y: vh - 40 };
 		const p2: Vec = badge
