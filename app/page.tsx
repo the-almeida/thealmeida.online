@@ -29,12 +29,12 @@ export default function Home() {
         <CenteredNavigation />
 
         <div className="hidden w-screen h-px animate-glow md:block animate-fade-left bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 mb-3" />
-        <NameTrigger text="theAlmeida" />
+        <NameTrigger text="Gustavo Almeida" />
         <div className="hidden w-screen h-px animate-glow md:block animate-fade-right bg-gradient-to-r from-zinc-300/0 via-zinc-300/50 to-zinc-300/0 mt-3" />
 
         <div className="my-16 text-center animate-fade-in">
           <h2 className="text-md px-6 text-zinc-400 md:max-w-2xl md:text-xl xl:text-2xl">
-            Hi, I'm Gustavo Almeida, a Software Engineer and Entrepreneur with
+            Hi, I'm a Software Engineer and Entrepreneur with
             around {yearsOfExperience} years of experience. I have built two
             successful companies, visually stunning websites, performant APIs,
             and smartwatch integrations. I specialize in JS/TS Stack but also

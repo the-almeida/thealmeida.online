@@ -80,7 +80,7 @@ export const NameTrigger: React.FC<{ text: string }> = ({ text }) => {
 
 	return (
 		<div ref={wrapper} className="relative z-10">
-			<h1 className="text-4xl text-white duration-1000 text-edge-outline animate-title font-display sm:text-6xl md:text-9xl whitespace-nowrap">
+			<h1 className="text-4xl text-white duration-1000 text-edge-outline animate-title font-display sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap">
 				{hidden ? (
 					<button
 						type="button"
