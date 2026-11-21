@@ -8,16 +8,23 @@ import { PrizeContent } from "./prize";
 import { HUD_LAYOUT_ID, SecretsBadge } from "./secrets-badge";
 import { useSecrets } from "./secrets-context";
 import { ShipFleet } from "./ship-fleet";
+import { Visitor, VisitorContent } from "./visitor";
 
 /** Everything that floats above the page: counter, dialogs, ships, game. */
 export const SecretsLayer: React.FC = () => {
-	const { ready, found, overlay, setOverlay } = useSecrets();
+	const { ready, found, markFound, overlay, setOverlay } = useSecrets();
 	const close = useCallback(() => setOverlay(null), [setOverlay]);
 	const openGame = useCallback(() => setOverlay("game"), [setOverlay]);
+	const catchShip = useCallback(() => {
+		markFound("ship");
+		openGame();
+	}, [markFound, openGame]);
+	const catchVisitor = useCallback(() => setOverlay("visitor"), [setOverlay]);
 
 	return (
 		<LayoutGroup>
-			<ShipFleet />
+			<ShipFleet onCatch={catchShip} />
+			<Visitor onCatch={catchVisitor} />
 			<GameOverlay />
 
 			{/* Hidden while the intro is open, so the intro card can morph into it. */}
@@ -46,6 +53,12 @@ export const SecretsLayer: React.FC = () => {
 				{overlay === "prize" ? (
 					<Dialog key="prize" onClose={close} labelledBy="prize-title">
 						<PrizeContent titleId="prize-title" />
+					</Dialog>
+				) : null}
+
+				{overlay === "visitor" ? (
+					<Dialog key="visitor" onClose={close} labelledBy="visitor-title">
+						<VisitorContent titleId="visitor-title" onClose={close} />
 					</Dialog>
 				) : null}
 			</AnimatePresence>

@@ -2,7 +2,7 @@
 import { X } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { SCORE_TARGET } from "../config";
-import { FAST_SHIP } from "../pixel-art";
+import { RAIDER } from "../pixel-art";
 import { PrizeContent } from "../prize";
 import { useSecrets } from "../secrets-context";
 import { GameState, TUNING, createGame, renderGame, resizeGame, setTarget, updateGame } from "./engine";
@@ -19,7 +19,7 @@ const KEYS: Record<string, [number, number]> = {
 };
 
 function spriteImage(): HTMLCanvasElement {
-	const rows = FAST_SHIP.rows;
+	const rows = RAIDER.rows;
 	const c = document.createElement("canvas");
 	c.width = rows[0].length;
 	c.height = rows.length;
@@ -27,7 +27,7 @@ function spriteImage(): HTMLCanvasElement {
 	rows.forEach((row, y) =>
 		Array.from(row).forEach((ch, x) => {
 			if (ch === ".") return;
-			ctx.fillStyle = FAST_SHIP.palette[ch];
+			ctx.fillStyle = RAIDER.palette[ch];
 			ctx.fillRect(x, y, 1, 1);
 		}),
 	);
