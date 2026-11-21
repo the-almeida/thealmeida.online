@@ -8,3 +8,10 @@
   }
 } 
 
+
+/* The hero's "scroll to experience" chevron glides instead of jumping. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
